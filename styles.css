@@ -11,7 +11,9 @@ body {
 }
 
 .logo {
-    max-width: 300px;
+    max-width: 900px;
+    width: 100%;
+    height: auto;
     display: block;
     margin: 20px auto;
 }
