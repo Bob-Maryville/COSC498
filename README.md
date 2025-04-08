@@ -66,7 +66,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 - Instructor: Michael Palmer
 - University: Maryville University  
-- Resources: [Any tutorials or tools you used]  
+- Resources: I am using you.com as a resource for the code for this project.
 
 ---
 
