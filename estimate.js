@@ -160,6 +160,7 @@ function updateGrandTotal() {
     document.getElementById('grandTotal').textContent = `$${grandTotal.toFixed(2)}`;
 }
 
+// OLD version to replace:
 const validators = {
     name: (value) => ({
         isValid: /^[A-Za-z\s]{2,50}$/.test(value),
@@ -170,7 +171,7 @@ const validators = {
         message: 'Please enter a valid email address'
     }),
     phone: (value) => ({
-        isValid: /^\+?[1-9][0-9]{7,14}$/.test(value),
+        isValid: /^\+?[1-9][0-9]{9,9}$/.test(value),
         message: 'Please enter a valid phone number'
     }),
     address: (value) => ({
@@ -178,6 +179,113 @@ const validators = {
         message: 'Address must be between 5 and 100 characters'
     })
 };
+
+// Add form validation initialization
+function initializeFormValidation() {
+    const customerForm = document.getElementById('customerForm');
+    if (!customerForm) return;
+
+    // Add validation for each input
+    customerForm.querySelectorAll('input').forEach(input => {
+        const validator = validators[input.name];
+        
+        if (validator) {
+            // Add input event listener
+            input.addEventListener('input', () => {
+                validateField(input, validator);
+            });
+
+            // Add blur event listener
+            input.addEventListener('blur', () => {
+                validateField(input, validator);
+            });
+        }
+    });
+
+    // Add date field validation
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        dateInput.addEventListener('input', () => {
+            if (!dateInput.value) {
+                dateInput.setCustomValidity('Please select a date');
+            } else {
+                dateInput.setCustomValidity('');
+            }
+            dateInput.reportValidity();
+        });
+    }
+
+    // Add form submit handler
+    customerForm.addEventListener('submit', handleFormSubmit);
+}
+
+// Field validation function
+function validateField(input, validator) {
+    const result = validator(input.value);
+    input.setCustomValidity(result.isValid ? '' : result.message);
+    
+    // Add visual feedback
+    if (result.isValid) {
+        input.classList.remove('invalid');
+        input.classList.add('valid');
+    } else {
+        input.classList.remove('valid');
+        input.classList.add('invalid');
+    }
+    
+    input.reportValidity();
+}
+
+// Form submission handler
+function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    let isValid = true;
+    
+    // Validate all fields
+    form.querySelectorAll('input').forEach(input => {
+        const validator = validators[input.name];
+        if (validator) {
+            const result = validator(input.value);
+            if (!result.isValid) {
+                isValid = false;
+                input.setCustomValidity(result.message);
+                input.reportValidity();
+            }
+        } else if (input.type === 'date' && !input.value) {
+            isValid = false;
+            input.setCustomValidity('Please select a date');
+            input.reportValidity();
+        }
+    });
+    
+    if (isValid) {
+        // Form is valid, you can proceed with submission
+        console.log('Form is valid - ready for submission');
+        // Add your form submission logic here
+    }
+}
+
+// Add CSS for validation feedback
+const style = document.createElement('style');
+style.textContent = `
+    .form-group input.valid {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
+    
+    .form-group input.invalid {
+        border-color: #dc3545;
+        background-color: #fff8f8;
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize validation when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initializeFormValidation();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     // Populate quantity dropdowns
@@ -194,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Add form validation
+    // OLD version to replace:
     const customerForm = document.getElementById('customerForm');
     customerForm.querySelectorAll('input').forEach(input => {
         const validator = validators[input.name];
