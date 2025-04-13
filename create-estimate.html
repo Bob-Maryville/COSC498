@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Create Estimate</title>
     <link rel="stylesheet" href="estimate-styles.css">
+    <script src="estimate.js" defer></script>
 </head>
 
 <div class="nav-links">
@@ -78,17 +79,15 @@
                 </tr>
                 <tr>
                     <td>
-                        <select name="roof-pitch">
-                            <option value="">Select Roof Pitch</option>
-                            <option value="flat">Flat</option>
-                            <option value="standard">Standard</option>
-                            <option value="steep">Steep</option>
+                        <select name="drip-edge">
+                            <option value="">Drip Edge Size</option>
+                            <option value="drip-edge-small">Small</option>
+                            <option value="drip-edge-large">Large</option>
                         </select>
                     </td>
                     <td>
-                        <select name="roof-pitch">
-                            <option value="">Select Pitch</option>
-                            <!-- Numbers 1-100 i will generate with javascript-->
+                        <select name="roof-size">
+                            <option value="">Drip Edge Quantity</option>
                         </select>
                     </td>
                     <td class="price-cell"></td>
@@ -123,8 +122,7 @@
                     </td>
                     <td>
                         <select name="chimney-size">
-                            <option value="">Select Size</option>
-                            <!-- Numbers 1-100 i will generate with javascript-->
+                            <option value="">Select Quantity</option>
                         </select>
                     </td>
                     <td class="price-cell"></td>
@@ -141,7 +139,6 @@
                     <td>
                         <select name="underlayment-quantity">
                             <option value="">Select Quantity</option>
-                            <!-- Numbers 1-100 i will generate with javascript-->
                         </select>
                     </td>
                     <td class="price-cell"></td>
@@ -159,7 +156,6 @@
                     <td>
                         <select name="dumpster-size">
                             <option value="">Select Size</option>
-                            <!-- Numbers 1-100 i will generate with javascript-->
                         </select>
                     </td>
                     <td class="price-cell"></td>
