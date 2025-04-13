@@ -1,29 +1,28 @@
 const ITEM_PRICES = {
-    shingleType: {
+    'shingle-type': {
         '3-tab': 75.00,
         'architectural': 95.00,
         'designer': 125.00
     },
-    roofSize: {
-        'flat': 200.00,
-        'standard': 300.00,
-        'steep': 450.00
+    'drip-edge': {
+        'drip-edge-small': 45.00,
+        'drip-edge-large': 65.00
     },
-    ventType: {
+    'vent-type': {
         'box': 45.00,
         'turbine': 65.00,
         'ridge': 85.00
     },
-    chimneyFlashingSize: {
-        'small': 150.00,
-        'medium': 200.00,
-        'large': 250.00
+    'chimney-flashing-size': {
+        'chimney-small': 150.00,
+        'chimney-medium': 200.00,
+        'chimney-large': 250.00
     },
-    underlaymentType: {
+    'underlayment-type': {
         'felt': 35.00,
         'synthetic': 55.00
     },
-    dumpsterSize: {
+    'dumpster-size': {
         'dump-small': 350.00,
         'dump-medium': 450.00,
         'dump-large': 550.00
@@ -31,7 +30,8 @@ const ITEM_PRICES = {
 };
 
 function populateQuantityDropdowns() {
-    const quantitySelects = document.querySelectorAll('select[name$="quantity"], select[name$="size"]');
+    // Only select dropdowns that have 'quantity' in their name (second column)
+    const quantitySelects = document.querySelectorAll('select[name$="quantity"]');
     
     quantitySelects.forEach(select => {
         // Clear existing options except the first one
@@ -48,6 +48,72 @@ function populateQuantityDropdowns() {
         }
     });
 }
+
+// Update the updatePrices function to include grand total calculation
+function updatePrices() {
+    const rows = document.querySelectorAll('.estimate-table tbody tr');
+    let grandTotal = 0;
+    
+    rows.forEach(row => {
+        const typeSelect = row.querySelector('td:first-child select');
+        const quantitySelect = row.querySelector('td:nth-child(2) select');
+        const priceCell = row.querySelector('.price-cell');
+        const totalCell = row.querySelector('.total-cell');
+        
+        if (typeSelect && priceCell && quantitySelect && totalCell) {
+            const itemType = typeSelect.name;
+            const selectedValue = typeSelect.value;
+            const quantity = parseInt(quantitySelect.value) || 0;
+            
+            if (ITEM_PRICES[itemType] && ITEM_PRICES[itemType][selectedValue]) {
+                const unitPrice = ITEM_PRICES[itemType][selectedValue];
+                const lineTotal = unitPrice * quantity;
+                
+                // Update unit price cell
+                priceCell.textContent = `$${unitPrice.toFixed(2)}`;
+                
+                // Update line total cell
+                totalCell.textContent = `$${lineTotal.toFixed(2)}`;
+                
+                // Add to grand total
+                grandTotal += lineTotal;
+            } else {
+                priceCell.textContent = '';
+                totalCell.textContent = '';
+            }
+        }
+    });
+    
+    // Update or create grand total row
+    let grandTotalRow = document.querySelector('.grand-total-row');
+    if (!grandTotalRow) {
+        const table = document.querySelector('.estimate-table table');
+        grandTotalRow = document.createElement('tr');
+        grandTotalRow.className = 'grand-total-row';
+        grandTotalRow.innerHTML = `
+            <td colspan="3" style="text-align: right"><strong>Grand Total:</strong></td>
+            <td class="grand-total-cell"></td>
+        `;
+        table.appendChild(grandTotalRow);
+    }
+    
+    // Update grand total amount
+    const grandTotalCell = grandTotalRow.querySelector('.grand-total-cell');
+    grandTotalCell.textContent = `$${grandTotal.toFixed(2)}`;
+}
+
+// Update the event listeners to trigger on both type and quantity changes
+document.addEventListener('DOMContentLoaded', () => {
+    // Existing quantity dropdown population code
+    populateQuantityDropdowns();
+    
+    // Add event listeners for both type and quantity changes
+    const allSelects = document.querySelectorAll('.estimate-table tbody tr select');
+    allSelects.forEach(select => {
+        select.addEventListener('change', updatePrices);
+    });
+});
+
 
 function updateLineTotal(row) {
     const typeSelect = row.querySelector('select:first-child');
