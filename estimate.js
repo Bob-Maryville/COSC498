@@ -1,3 +1,4 @@
+// Price constants
 const ITEM_PRICES = {
     'shingle-type': {
         '3-tab': 75.00,
@@ -29,379 +30,7 @@ const ITEM_PRICES = {
     }
 };
 
-function populateQuantityDropdowns() {
-    // Only select dropdowns that have 'quantity' in their name (second column)
-    const quantitySelects = document.querySelectorAll('select[name$="quantity"]');
-    
-    quantitySelects.forEach(select => {
-        // Clear existing options except the first one
-        while (select.options.length > 1) {
-            select.remove(1);
-        }
-        
-        // Add options 1-100
-        for (let i = 1; i <= 100; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = i;
-            select.appendChild(option);
-        }
-    });
-}
-
-// Update the updatePrices function to include grand total calculation
-function updatePrices() {
-    const rows = document.querySelectorAll('.estimate-table tbody tr');
-    let grandTotal = 0;
-    
-    rows.forEach(row => {
-        const typeSelect = row.querySelector('td:first-child select');
-        const quantitySelect = row.querySelector('td:nth-child(2) select');
-        const priceCell = row.querySelector('.price-cell');
-        const totalCell = row.querySelector('.total-cell');
-        
-        if (typeSelect && priceCell && quantitySelect && totalCell) {
-            const itemType = typeSelect.name;
-            const selectedValue = typeSelect.value;
-            const quantity = parseInt(quantitySelect.value) || 0;
-            
-            if (ITEM_PRICES[itemType] && ITEM_PRICES[itemType][selectedValue]) {
-                const unitPrice = ITEM_PRICES[itemType][selectedValue];
-                const lineTotal = unitPrice * quantity;
-                
-                // Update unit price cell
-                priceCell.textContent = `$${unitPrice.toFixed(2)}`;
-                
-                // Update line total cell
-                totalCell.textContent = `$${lineTotal.toFixed(2)}`;
-                
-                // Add to grand total
-                grandTotal += lineTotal;
-            } else {
-                priceCell.textContent = '';
-                totalCell.textContent = '';
-            }
-        }
-    });
-    
-    // Update or create grand total row
-    let grandTotalRow = document.querySelector('.grand-total-row');
-    if (!grandTotalRow) {
-        const table = document.querySelector('.estimate-table table');
-        grandTotalRow = document.createElement('tr');
-        grandTotalRow.className = 'grand-total-row';
-        grandTotalRow.innerHTML = `
-            <td colspan="3" style="text-align: right"><strong>Grand Total:</strong></td>
-            <td class="grand-total-cell"></td>
-        `;
-        table.appendChild(grandTotalRow);
-    }
-    
-    // Update grand total amount
-    const grandTotalCell = grandTotalRow.querySelector('.grand-total-cell');
-    grandTotalCell.textContent = `$${grandTotal.toFixed(2)}`;
-}
-
-// Update the event listeners to trigger on both type and quantity changes
-document.addEventListener('DOMContentLoaded', () => {
-    // Existing quantity dropdown population code
-    populateQuantityDropdowns();
-    
-    // Add event listeners for both type and quantity changes
-    const allSelects = document.querySelectorAll('.estimate-table tbody tr select');
-    allSelects.forEach(select => {
-        select.addEventListener('change', updatePrices);
-    });
-});
-
-
-function updateLineTotal(row) {
-    const typeSelect = row.querySelector('select:first-child');
-    const quantitySelect = row.querySelector('select:nth-child(2)');
-    const priceCell = row.querySelector('.price-cell');
-    const totalCell = row.querySelector('.total-cell');
-    
-    if (!typeSelect || !quantitySelect) return;
-    
-    const itemType = typeSelect.name;
-    const selectedValue = typeSelect.value;
-    const quantity = parseInt(quantitySelect.value) || 0;
-    
-    const unitPrice = ITEM_PRICES[itemType]?.[selectedValue] || 0;
-    const total = unitPrice * quantity;
-    
-    priceCell.textContent = unitPrice ? `$${unitPrice.toFixed(2)}` : '';
-    totalCell.textContent = total ? `$${total.toFixed(2)}` : '';
-    
-    return total;
-}
-
-function updateGrandTotal() {
-    const rows = document.querySelectorAll('.estimate-table tbody tr');
-    let grandTotal = 0;
-    
-    rows.forEach(row => {
-        const lineTotal = updateLineTotal(row);
-        grandTotal += lineTotal || 0;
-    });
-    
-    // Add grand total element if not exists
-    let grandTotalRow = document.querySelector('.grand-total-row');
-    if (!grandTotalRow) {
-        const table = document.querySelector('.estimate-table table');
-        grandTotalRow = table.insertRow(-1);
-        grandTotalRow.className = 'grand-total-row';
-        grandTotalRow.innerHTML = `
-            <td colspan="3" style="text-align: right"><strong>Grand Total:</strong></td>
-            <td id="grandTotal"></td>
-        `;
-    }
-    
-    document.getElementById('grandTotal').textContent = `$${grandTotal.toFixed(2)}`;
-}
-
-
-
-// Add form validation initialization
-function initializeFormValidation() {
-    const customerForm = document.getElementById('customerForm');
-    if (!customerForm) return;
-
-    // Add validation for each input
-    customerForm.querySelectorAll('input').forEach(input => {
-        const validator = validators[input.name];
-        
-        if (validator) {
-            // Add input event listener
-            input.addEventListener('input', () => {
-                validateField(input, validator);
-            });
-
-            // Add blur event listener
-            input.addEventListener('blur', () => {
-                validateField(input, validator);
-            });
-        }
-    });
-
-    // Add date field validation
-    const dateInput = document.getElementById('date');
-    if (dateInput) {
-        dateInput.addEventListener('input', () => {
-            if (!dateInput.value) {
-                dateInput.setCustomValidity('Please select a date');
-            } else {
-                dateInput.setCustomValidity('');
-            }
-            dateInput.reportValidity();
-        });
-    }
-
-    // Add form submit handler
-    customerForm.addEventListener('submit', handleFormSubmit);
-}
-
-// Field validation function
-function validateField(input, validator) {
-    const result = validator(input.value);
-    input.setCustomValidity(result.isValid ? '' : result.message);
-    
-    // Add visual feedback
-    if (result.isValid) {
-        input.classList.remove('invalid');
-        input.classList.add('valid');
-    } else {
-        input.classList.remove('valid');
-        input.classList.add('invalid');
-    }
-    
-    input.reportValidity();
-}
-
-// Form submission handler
-function handleFormSubmit(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    let isValid = true;
-    
-    // Validate all fields
-    form.querySelectorAll('input').forEach(input => {
-        const validator = validators[input.name];
-        if (validator) {
-            const result = validator(input.value);
-            if (!result.isValid) {
-                isValid = false;
-                input.setCustomValidity(result.message);
-                input.reportValidity();
-            }
-        } else if (input.type === 'date' && !input.value) {
-            isValid = false;
-            input.setCustomValidity('Please select a date');
-            input.reportValidity();
-        }
-    });
-    
-    if (isValid) {
-        // Form is valid, you can proceed with submission
-        console.log('Form is valid - ready for submission');
-        // Add your form submission logic here
-    }
-}
-
-// Add CSS for validation feedback
-const style = document.createElement('style');
-style.textContent = `
-    .form-group input.valid {
-        border-color: #28a745;
-        background-color: #f8fff9;
-    }
-    
-    .form-group input.invalid {
-        border-color: #dc3545;
-        background-color: #fff8f8;
-    }
-`;
-document.head.appendChild(style);
-
-// Initialize validation when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    initializeFormValidation();
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Populate quantity dropdowns
-    populateQuantityDropdowns();
-    
-    // Add change event listeners to all selects
-    document.querySelectorAll('.estimate-table select').forEach(select => {
-        select.addEventListener('change', (event) => {
-            const row = event.target.closest('tr');
-            if (row) {
-                updateLineTotal(row);
-                updateGrandTotal();
-            }
-        });
-    });
-    
-    // OLD version to replace:
-    const customerForm = document.getElementById('customerForm');
-    customerForm.querySelectorAll('input').forEach(input => {
-        const validator = validators[input.name];
-        if (validator) {
-            input.addEventListener('input', () => {
-                const result = validator(input.value);
-                input.setCustomValidity(result.isValid ? '' : result.message);
-            });
-        }
-    });
-    
-    // Handle form submission
-    customerForm.addEventListener('submit', handleFormSubmit);
-});
-
-
-
-// Update the updatePrices function to include grand total calculation
-function updatePrices() {
-    const rows = document.querySelectorAll('.estimate-table tbody tr');
-    let grandTotal = 0;
-    
-    rows.forEach(row => {
-        const typeSelect = row.querySelector('td:first-child select');
-        const quantitySelect = row.querySelector('td:nth-child(2) select');
-        const priceCell = row.querySelector('.price-cell');
-        const totalCell = row.querySelector('.total-cell');
-        
-        if (typeSelect && priceCell && quantitySelect && totalCell) {
-            const itemType = typeSelect.name;
-            const selectedValue = typeSelect.value;
-            const quantity = parseInt(quantitySelect.value) || 0;
-            
-            if (ITEM_PRICES[itemType] && ITEM_PRICES[itemType][selectedValue]) {
-                const unitPrice = ITEM_PRICES[itemType][selectedValue];
-                const lineTotal = unitPrice * quantity;
-                
-                // Update unit price cell
-                priceCell.textContent = `$${unitPrice.toFixed(2)}`;
-                
-                // Update line total cell
-                totalCell.textContent = `$${lineTotal.toFixed(2)}`;
-                
-                // Add to grand total
-                grandTotal += lineTotal;
-            } else {
-                priceCell.textContent = '';
-                totalCell.textContent = '';
-            }
-        }
-    });
-    
-    // Update or create grand total row
-    let grandTotalRow = document.querySelector('.grand-total-row');
-    if (!grandTotalRow) {
-        const table = document.querySelector('.estimate-table table');
-        grandTotalRow = document.createElement('tr');
-        grandTotalRow.className = 'grand-total-row';
-        grandTotalRow.innerHTML = `
-            <td colspan="3" style="text-align: right"><strong>Grand Total:</strong></td>
-            <td class="grand-total-cell"></td>
-        `;
-        table.appendChild(grandTotalRow);
-    }
-    
-    // Update grand total amount
-    const grandTotalCell = grandTotalRow.querySelector('.grand-total-cell');
-    grandTotalCell.textContent = `$${grandTotal.toFixed(2)}`;
-}
-
-
-function updateLineTotal(row) {
-    const typeSelect = row.querySelector('select:first-child');
-    const quantitySelect = row.querySelector('select:nth-child(2)');
-    const priceCell = row.querySelector('.price-cell');
-    const totalCell = row.querySelector('.total-cell');
-    
-    if (!typeSelect || !quantitySelect) return;
-    
-    const itemType = typeSelect.name;
-    const selectedValue = typeSelect.value;
-    const quantity = parseInt(quantitySelect.value) || 0;
-    
-    const unitPrice = ITEM_PRICES[itemType]?.[selectedValue] || 0;
-    const total = unitPrice * quantity;
-    
-    priceCell.textContent = unitPrice ? `$${unitPrice.toFixed(2)}` : '';
-    totalCell.textContent = total ? `$${total.toFixed(2)}` : '';
-    
-    return total;
-}
-
-function updateGrandTotal() {
-    const rows = document.querySelectorAll('.estimate-table tbody tr');
-    let grandTotal = 0;
-    
-    rows.forEach(row => {
-        const lineTotal = updateLineTotal(row);
-        grandTotal += lineTotal || 0;
-    });
-    
-    // Add grand total element if not exists
-    let grandTotalRow = document.querySelector('.grand-total-row');
-    if (!grandTotalRow) {
-        const table = document.querySelector('.estimate-table table');
-        grandTotalRow = table.insertRow(-1);
-        grandTotalRow.className = 'grand-total-row';
-        grandTotalRow.innerHTML = `
-            <td colspan="3" style="text-align: right"><strong>Grand Total:</strong></td>
-            <td id="grandTotal"></td>
-        `;
-    }
-    
-    document.getElementById('grandTotal').textContent = `$${grandTotal.toFixed(2)}`;
-}
-
-// OLD version to replace:
+// Form validation rules
 const validators = {
     name: (value) => ({
         isValid: /^[A-Za-z\s]{2,50}$/.test(value),
@@ -421,70 +50,95 @@ const validators = {
     })
 };
 
-// Add form validation initialization
-function initializeFormValidation() {
-    const customerForm = document.getElementById('customerForm');
-    if (!customerForm) return;
-
-    // Add validation for each input
-    customerForm.querySelectorAll('input').forEach(input => {
-        const validator = validators[input.name];
-        
-        if (validator) {
-            // Add input event listener
-            input.addEventListener('input', () => {
-                validateField(input, validator);
-            });
-
-            // Add blur event listener
-            input.addEventListener('blur', () => {
-                validateField(input, validator);
-            });
+// Dropdown population
+function populateQuantityDropdowns() {
+    const quantitySelects = document.querySelectorAll('select[name$="quantity"]');
+    quantitySelects.forEach(select => {
+        // Clear existing options except the first one
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+        // Add options 1-100
+        for (let i = 1; i <= 100; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            select.appendChild(option);
         }
     });
-
-    // Add date field validation
-    const dateInput = document.getElementById('date');
-    if (dateInput) {
-        dateInput.addEventListener('input', () => {
-            if (!dateInput.value) {
-                dateInput.setCustomValidity('Please select a date');
-            } else {
-                dateInput.setCustomValidity('');
-            }
-            dateInput.reportValidity();
-        });
-    }
-
-    // Add form submit handler
-    customerForm.addEventListener('submit', handleFormSubmit);
 }
 
-// Field validation function
+// Price calculation functions
+function updateLineTotal(row) {
+    const typeSelect = row.querySelector('td:first-child select');
+    const quantitySelect = row.querySelector('td:nth-child(2) select');
+    const priceCell = row.querySelector('.price-cell');
+    const totalCell = row.querySelector('.total-cell');
+    
+    if (!typeSelect?.value || !quantitySelect?.value) {
+        if (priceCell) priceCell.textContent = '';
+        if (totalCell) totalCell.textContent = '';
+        return 0;
+    }
+    
+    const itemType = typeSelect.name;
+    const selectedValue = typeSelect.value;
+    const quantity = parseInt(quantitySelect.value) || 0;
+    
+    const unitPrice = ITEM_PRICES[itemType]?.[selectedValue] || 0;
+    const total = unitPrice * quantity;
+    
+    priceCell.textContent = formatCurrency(unitPrice);
+    totalCell.textContent = formatCurrency(total);
+    
+    return total;
+}
+
+function updateGrandTotal() {
+    const rows = document.querySelectorAll('.estimate-table tbody tr');
+    let grandTotal = 0;
+    
+    rows.forEach(row => {
+        const lineTotal = updateLineTotal(row);
+        grandTotal += lineTotal;
+    });
+    
+    let grandTotalRow = document.querySelector('.grand-total-row');
+    if (!grandTotalRow) {
+        const table = document.querySelector('.estimate-table table');
+        grandTotalRow = table.insertRow(-1);
+        grandTotalRow.className = 'grand-total-row';
+        grandTotalRow.innerHTML = `
+            <td colspan="3" style="text-align: right"><strong>Grand Total:</strong></td>
+            <td id="grandTotal"></td>
+        `;
+    }
+    
+    document.getElementById('grandTotal').textContent = formatCurrency(grandTotal);
+}
+
+// Utility functions
+function formatCurrency(amount) {
+    return `$${Number(amount).toFixed(2)}`;
+}
+
+// Form validation functions
 function validateField(input, validator) {
     const result = validator(input.value);
     input.setCustomValidity(result.isValid ? '' : result.message);
     
-    // Add visual feedback
-    if (result.isValid) {
-        input.classList.remove('invalid');
-        input.classList.add('valid');
-    } else {
-        input.classList.remove('valid');
-        input.classList.add('invalid');
-    }
+    input.classList.toggle('valid', result.isValid);
+    input.classList.toggle('invalid', !result.isValid);
     
     input.reportValidity();
 }
 
-// Form submission handler
 function handleFormSubmit(event) {
     event.preventDefault();
     
     const form = event.target;
     let isValid = true;
     
-    // Validate all fields
     form.querySelectorAll('input').forEach(input => {
         const validator = validators[input.name];
         if (validator) {
@@ -502,15 +156,36 @@ function handleFormSubmit(event) {
     });
     
     if (isValid) {
-        // Form is valid, you can proceed with submission
         console.log('Form is valid - ready for submission');
         // Add your form submission logic here
     }
 }
 
-// Add CSS for validation feedback
-const style = document.createElement('style');
-style.textContent = `
+function initializeFormValidation() {
+    const customerForm = document.getElementById('customerForm');
+    if (!customerForm) return;
+
+    customerForm.querySelectorAll('input').forEach(input => {
+        const validator = validators[input.name];
+        if (validator) {
+            input.addEventListener('input', () => validateField(input, validator));
+            input.addEventListener('blur', () => validateField(input, validator));
+        }
+    });
+
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        dateInput.addEventListener('input', () => {
+            dateInput.setCustomValidity(dateInput.value ? '' : 'Please select a date');
+            dateInput.reportValidity();
+        });
+    }
+
+    customerForm.addEventListener('submit', handleFormSubmit);
+}
+
+// Add validation styles
+const validationStyles = `
     .form-group input.valid {
         border-color: #28a745;
         background-color: #f8fff9;
@@ -521,10 +196,134 @@ style.textContent = `
         background-color: #fff8f8;
     }
 `;
-document.head.appendChild(style);
 
-// Initialize validation when DOM is loaded
+// Single initialization point
 document.addEventListener('DOMContentLoaded', () => {
+    // Add validation styles
+    const style = document.createElement('style');
+    style.textContent = validationStyles;
+    document.head.appendChild(style);
+
+    // Initialize dropdowns
+    populateQuantityDropdowns();
+    
+    // Add event listeners for price updates
+    document.querySelectorAll('.estimate-table select').forEach(select => {
+        select.addEventListener('change', (event) => {
+            const row = event.target.closest('tr');
+            if (row) {
+                updateLineTotal(row);
+                updateGrandTotal();
+            }
+        });
+    });
+    
+    // Initialize form validation
     initializeFormValidation();
+    
+    // Initial calculation of totals
+    updateGrandTotal();
 });
 
+// Function to collect all form and estimate data
+function collectEstimateData() {
+    const customerData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        date: document.getElementById('date').value
+    };
+
+    // Collect line items
+    const lineItems = [];
+    document.querySelectorAll('.estimate-table tbody tr').forEach(row => {
+        const typeSelect = row.querySelector('td:first-child select');
+        const quantitySelect = row.querySelector('td:nth-child(2) select');
+        const priceCell = row.querySelector('.price-cell');
+        const totalCell = row.querySelector('.total-cell');
+        
+        if (typeSelect && typeSelect.value) {
+            lineItems.push({
+                itemType: typeSelect.name,
+                selectedItem: typeSelect.value,
+                quantity: parseInt(quantitySelect.value) || 0,
+                unitPrice: parseFloat(priceCell.textContent.replace('$', '')) || 0,
+                lineTotal: parseFloat(totalCell.textContent.replace('$', '')) || 0
+            });
+        }
+    });
+
+    // Get grand total
+    const grandTotal = document.querySelector('#grandTotal')?.textContent.replace('$', '') || '0';
+
+    return {
+        customer: customerData,
+        items: lineItems,
+        totalAmount: parseFloat(grandTotal)
+    };
+}
+
+// Function to save estimate
+async function saveEstimate() {
+    try {
+        // Show loading state
+        const saveButton = document.getElementById('saveEstimate');
+        const originalText = saveButton.textContent;
+        saveButton.textContent = 'Saving...';
+        saveButton.disabled = true;
+
+        // Collect data
+        const estimateData = collectEstimateData();
+
+        // Send to server
+        const response = await fetch('save_estimate.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(estimateData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showFeedback('Estimate saved successfully!', true);
+            setTimeout(() => {
+                window.location.href = 'find-estimate.html';
+            }, 2000);
+        } else {
+            throw new Error(result.message || 'Failed to save estimate');
+        }
+    } catch (error) {
+        showFeedback(error.message, false);
+    } finally {
+        // Reset button state
+        const saveButton = document.getElementById('saveEstimate');
+        saveButton.textContent = 'Save Estimate';
+        saveButton.disabled = false;
+    }
+}
+
+// Function to show feedback messages
+function showFeedback(message, isSuccess) {
+    const feedbackDiv = document.getElementById('feedback') || document.createElement('div');
+    feedbackDiv.id = 'feedback';
+    feedbackDiv.className = `feedback-message ${isSuccess ? 'success' : 'error'}`;
+    feedbackDiv.textContent = message;
+    
+    if (!document.getElementById('feedback')) {
+        document.querySelector('.button-container').insertAdjacentElement('beforebegin', feedbackDiv);
+    }
+    
+    setTimeout(() => feedbackDiv.remove(), 5000);
+}
+
+// Add event listener for save button
+document.addEventListener('DOMContentLoaded', () => {
+    // Add save button event listener
+    const saveButton = document.getElementById('saveEstimate');
+    if (saveButton) {
+        saveButton.addEventListener('click', saveEstimate);
+    }
+});
