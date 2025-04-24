@@ -1,0 +1,15 @@
+# Enable CORS
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "POST, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type"
+
+# Handle OPTIONS request
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# Ensure PHP can handle JSON input
+<IfModule mod_php.c>
+    php_value post_max_size 10M
+    php_value upload_max_filesize 10M
+</IfModule>

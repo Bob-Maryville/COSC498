@@ -1,11 +1,30 @@
 <?php
-header('Content-Type: application/json');
+// Set proper headers to allow POST
+header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Check if it's a POST request
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Method not allowed. Please use POST.'
+    ]);
+    exit;
+}
 
 try {
     // Get POST data
-    $data = json_decode(file_get_contents('php://input'), true);
-    if (!$data) {
-        throw new Exception('Invalid data received');
+    $jsonData = file_get_contents('php://input');
+    if (!$jsonData) {
+        throw new Exception('No data received');
+    }
+
+    $data = json_decode($jsonData, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('Invalid JSON data: ' . json_last_error_msg());
     }
 
     // Database connection
@@ -32,7 +51,7 @@ try {
         // Insert estimate
         $stmt = $conn->prepare("INSERT INTO Estimates (CustomerID, EstimateNumber, DateCreated, TotalAmount) VALUES (?, ?, ?, ?)");
         $estimateNumber = 'EST-' . date('Ymd') . '-' . rand(1000, 9999);
-        $currentDate = $data['customer']['date'];
+        $currentDate = date('Y-m-d');
         $stmt->bind_param("issd", 
             $customerId,
             $estimateNumber,
@@ -67,15 +86,15 @@ try {
         ]);
 
     } catch (Exception $e) {
-        // Rollback on error
         $conn->rollback();
         throw $e;
     }
 
 } catch (Exception $e) {
+    http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => 'Error saving estimate: ' . $e->getMessage()
     ]);
 }
 ?>
