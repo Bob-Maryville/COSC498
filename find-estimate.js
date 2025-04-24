@@ -1,84 +1,126 @@
-// Constants for API endpoints
-const API_ENDPOINTS = {
-    estimates: '/api/estimates',
-    estimateDetails: '/api/estimates/'
-};
 
-// Initialize estimate list functionality
+// Add this at the top of your file
+function debugEstimates() {
+    try {
+        const estimatesJson = localStorage.getItem('estimates');
+        console.log('Raw localStorage data:', estimatesJson);
+        
+        const estimates = JSON.parse(estimatesJson) || [];
+        console.log('Parsed estimates:', estimates);
+        
+        estimates.forEach((est, index) => {
+            console.log(`Estimate ${index}:`, {
+                id: est.id,
+                idType: typeof est.id,
+                customer: est.customer,
+                date: est.date
+            });
+        });
+    } catch (error) {
+        console.error('Debug error:', error);
+    }
+}
+
+// Call this function when page loads
+document.addEventListener('DOMContentLoaded', debugEstimates);
+
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Debug: Check if estimates exist in localStorage
+    console.log('Initial estimates:', localStorage.getItem('estimates'));
+    
+    // Load and display estimates
     loadEstimates();
-    initializeSearchFilters();
 });
 
-// Load all estimates from database
-async function loadEstimates() {
+function loadEstimates() {
     try {
-        const response = await fetch(API_ENDPOINTS.estimates);
-        const estimates = await response.json();
-        displayEstimates(estimates);
+        // Get and parse estimates from localStorage
+        const estimatesJson = localStorage.getItem('estimates');
+        console.log('Raw estimates from localStorage:', estimatesJson);
+        
+        const estimates = JSON.parse(estimatesJson) || [];
+        console.log('Parsed estimates:', estimates);
+        
+        const tableBody = document.querySelector('.estimates-table tbody');
+        
+        if (!estimates.length) {
+            tableBody.innerHTML = '<tr><td colspan="2">No estimates found</td></tr>';
+            return;
+        }
+
+        // Create table rows
+        const html = estimates.map(estimate => {
+            // Ensure estimate has required properties
+            if (!estimate || !estimate.customer) {
+                console.log('Invalid estimate:', estimate);
+                return '';
+            }
+
+            // Convert ID to string and ensure it exists
+            const id = (estimate.id || Date.now()).toString();
+            const name = estimate.customer.name || 'Unknown';
+            const date = estimate.date || 'No date';
+
+            return `
+                <tr>
+                    <td><a href="#" class="estimate-link" data-id="${id}">${name}</a></td>
+                    <td>${date}</td>
+                </tr>
+            `;
+        }).join('');
+
+        tableBody.innerHTML = html;
+
+        // Add click handlers
+        document.querySelectorAll('.estimate-link').forEach(link => {
+            link.addEventListener('click', handleEstimateClick);
+        });
+
     } catch (error) {
-        showError('Failed to load estimates');
-        console.error('Error:', error);
+        console.error('Error in loadEstimates:', error);
+        const tableBody = document.querySelector('.estimates-table tbody');
+        tableBody.innerHTML = '<tr><td colspan="2">Error loading estimates</td></tr>';
     }
 }
 
-// Display estimates in the list
-function displayEstimates(estimates) {
-    const estimateList = document.getElementById('estimate-list');
-    estimateList.innerHTML = estimates.map(estimate => `
-        <div class="estimate-item" data-id="${estimate.id}">
-            <div class="estimate-header">
-                <span class="estimate-date">${new Date(estimate.date).toLocaleDateString()}</span>
-                <span class="estimate-customer">${estimate.customerName}</span>
-            </div>
-            <div class="estimate-total">$${estimate.total.toFixed(2)}</div>
-        </div>
-    `).join('');
-
-    // Add click handlers to estimate items
-    document.querySelectorAll('.estimate-item').forEach(item => {
-        item.addEventListener('click', handleEstimateClick);
-    });
-}
-
-// Handle estimate click
-async function handleEstimateClick(event) {
-    const estimateId = event.currentTarget.dataset.id;
+function handleEstimateClick(event) {
+    event.preventDefault();
+    
     try {
-        // Show loading state
-        showLoading();
+        // Get ID from clicked element
+        const id = event.target.getAttribute('data-id');
+        console.log('Clicked estimate ID:', id);
         
-        const response = await fetch(`${API_ENDPOINTS.estimateDetails}${estimateId}`);
-        const estimateDetails = await response.json();
+        if (!id) {
+            throw new Error('No estimate ID found');
+        }
+
+        // Get estimates from localStorage
+        const estimatesJson = localStorage.getItem('estimates');
+        console.log('Looking for estimate in:', estimatesJson);
         
-        // Display estimate details
-        displayEstimateDetails(estimateDetails);
+        const estimates = JSON.parse(estimatesJson) || [];
+        
+        // Find matching estimate
+        const estimate = estimates.find(est => {
+            const estId = (est.id || '').toString();
+            const clickedId = id.toString();
+            console.log('Comparing:', estId, 'with', clickedId);
+            return estId === clickedId;
+        });
+
+        if (!estimate) {
+            throw new Error(`Estimate with ID ${id} not found`);
+        }
+
+        // Navigate to details page
+        window.location.href = `estimate-details.html?id=${id}`;
+
     } catch (error) {
-        showError('Failed to load estimate details');
-        console.error('Error:', error);
-    } finally {
-        hideLoading();
+        console.error('Error handling estimate click:', error);
+        alert('Error viewing estimate details. Please try again.');
     }
 }
 
-// Utility functions for user feedback
-function showLoading() {
-    const loader = document.getElementById('loader');
-    if (loader) loader.style.display = 'block';
-}
 
-function hideLoading() {
-    const loader = document.getElementById('loader');
-    if (loader) loader.style.display = 'none';
-}
-
-function showError(message) {
-    const errorDiv = document.getElementById('error-message');
-    if (errorDiv) {
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-        setTimeout(() => {
-            errorDiv.style.display = 'none';
-        }, 3000);
-    }
-}

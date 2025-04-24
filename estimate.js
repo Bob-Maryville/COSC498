@@ -30,7 +30,7 @@ const ITEM_PRICES = {
     }
 };
 
-// Form validation rules
+// Form validation rules with regex patterns
 const validators = {
     name: (value) => ({
         isValid: /^[A-Za-z\s]{2,50}$/.test(value),
@@ -54,9 +54,11 @@ const validators = {
 function populateQuantityDropdowns() {
     const quantitySelects = document.querySelectorAll('select[name$="quantity"]');
     quantitySelects.forEach(select => {
+        // Clear existing options except the first one
         while (select.options.length > 1) {
             select.remove(1);
         }
+        // Add options 1-100
         for (let i = 1; i <= 100; i++) {
             const option = document.createElement('option');
             option.value = i;
@@ -73,12 +75,14 @@ function updateLineTotal(row) {
     const priceCell = row.querySelector('.price-cell');
     const totalCell = row.querySelector('.total-cell');
     
+    // Clear cells if no selection
     if (!typeSelect?.value || !quantitySelect?.value) {
         if (priceCell) priceCell.textContent = '';
         if (totalCell) totalCell.textContent = '';
         return 0;
     }
     
+    // Calculate line total
     const itemType = typeSelect.name;
     const selectedValue = typeSelect.value;
     const quantity = parseInt(quantitySelect.value) || 0;
@@ -86,6 +90,7 @@ function updateLineTotal(row) {
     const unitPrice = ITEM_PRICES[itemType]?.[selectedValue] || 0;
     const total = unitPrice * quantity;
     
+    // Update cells with formatted currency
     priceCell.textContent = formatCurrency(unitPrice);
     totalCell.textContent = formatCurrency(total);
     
@@ -97,11 +102,13 @@ function updateGrandTotal() {
     const rows = document.querySelectorAll('.estimate-table tbody tr');
     let grandTotal = 0;
     
+    // Sum all line totals
     rows.forEach(row => {
         const lineTotal = updateLineTotal(row);
         grandTotal += lineTotal;
     });
     
+    // Create or update grand total row
     let grandTotalRow = document.querySelector('.grand-total-row');
     if (!grandTotalRow) {
         const table = document.querySelector('.estimate-table');
@@ -121,108 +128,6 @@ function updateGrandTotal() {
 function formatCurrency(amount) {
     return `$${Number(amount).toFixed(2)}`;
 }
-
-// Collect all estimate data
-function collectEstimateData() {
-    const items = [];
-    document.querySelectorAll('.estimate-table tbody tr').forEach(row => {
-        const typeSelect = row.querySelector('td:first-child select');
-        const quantitySelect = row.querySelector('td:nth-child(2) select');
-        if (typeSelect?.value) {
-            items.push({
-                type: typeSelect.name,
-                selection: typeSelect.value,
-                quantity: parseInt(quantitySelect.value) || 0,
-                price: row.querySelector('.price-cell').textContent,
-                total: row.querySelector('.total-cell').textContent
-            });
-        }
-    });
-
-    return {
-        id: Date.now(),
-        date: document.getElementById('date').value,
-        customer: {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            address: document.getElementById('address').value
-        },
-        items: items,
-        grandTotal: document.getElementById('grandTotal').textContent
-    };
-}
-
-function saveEstimate() {
-    console.log('Save operation starting...');
-    
-    try {
-        // 1. Collect form data
-        const estimateData = {
-            customer: {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                address: document.getElementById('address').value,
-                date: document.getElementById('date').value
-            },
-            items: [],
-            totalAmount: document.getElementById('grandTotal')?.textContent || '$0.00'
-        };
-
-        console.log('Customer data collected:', estimateData.customer);
-
-        // 2. Collect line items
-        document.querySelectorAll('.estimate-table tbody tr').forEach(row => {
-            const typeSelect = row.querySelector('td:first-child select');
-            const quantitySelect = row.querySelector('td:nth-child(2) select');
-            
-            if (typeSelect?.value) {
-                const item = {
-                    type: typeSelect.name,
-                    selection: typeSelect.value,
-                    quantity: parseInt(quantitySelect.value) || 0,
-                    price: row.querySelector('.price-cell')?.textContent || '$0.00',
-                    total: row.querySelector('.total-cell')?.textContent || '$0.00'
-                };
-                estimateData.items.push(item);
-                console.log('Added line item:', item);
-            }
-        });
-
-        // 3. Get existing estimates or create new array
-        let estimates = [];
-        const existingData = localStorage.getItem('estimates');
-        
-        if (existingData) {
-            console.log('Found existing estimates:', existingData);
-            estimates = JSON.parse(existingData);
-        }
-
-        // 4. Add new estimate
-        estimates.push(estimateData);
-        
-        // 5. Save to localStorage
-        localStorage.setItem('estimates', JSON.stringify(estimates));
-        
-        // 6. Verify save
-        const savedData = localStorage.getItem('estimates');
-        console.log('Verification - saved data:', savedData);
-        
-        // 7. Show success message
-        alert('Estimate saved successfully!');
-        console.log('Save completed successfully');
-        
-        return true;
-
-    } catch (error) {
-        console.error('Save failed:', error);
-        alert('Failed to save estimate: ' + error.message);
-        return false;
-    }
-}
-
-
 
 // Validate form before saving
 function validateForm() {
@@ -251,13 +156,85 @@ function validateForm() {
     }
 
     // Validate at least one item is selected
-    const hasItems = document.querySelector('.estimate-table select[value]:not([value=""])');
+    const hasItems = Array.from(document.querySelectorAll('.estimate-table tbody tr'))
+        .some(row => row.querySelector('td:first-child select')?.value);
+    
     if (!hasItems) {
         isValid = false;
         alert('Please select at least one item for the estimate');
     }
 
     return isValid;
+}
+
+function saveEstimate() {
+    try {
+        // Generate ID
+        const estimateId = Date.now();
+        
+        // Collect estimate data
+        const estimateData = {
+            id: estimateId,
+            date: document.getElementById('date').value,
+            customer: {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value
+            },
+            items: [],
+            totalAmount: document.getElementById('grandTotal').textContent
+        };
+
+        // Collect line items
+        document.querySelectorAll('.estimate-table tbody tr').forEach(row => {
+            const typeSelect = row.querySelector('td:first-child select');
+            const quantitySelect = row.querySelector('td:nth-child(2) select');
+            if (typeSelect?.value) {
+                estimateData.items.push({
+                    type: typeSelect.name,
+                    selection: typeSelect.value,
+                    quantity: parseInt(quantitySelect.value) || 0,
+                    price: row.querySelector('.price-cell').textContent,
+                    total: row.querySelector('.total-cell').textContent
+                });
+            }
+        });
+
+        // Get existing estimates
+        let estimates = JSON.parse(localStorage.getItem('estimates')) || [];
+        
+        // Add new estimate
+        estimates.push(estimateData);
+        
+        // Save to localStorage
+        localStorage.setItem('estimates', JSON.stringify(estimates));
+
+        // Success message and redirect
+        alert('Estimate saved successfully!');
+        window.location.href = 'find-estimate.html';
+        
+    } catch (error) {
+        console.error('Save error:', error);
+        alert('Error saving estimate: ' + error.message);
+    }
+}
+
+
+
+// Show feedback message
+function showFeedback(message, isSuccess) {
+    const feedback = document.getElementById('saveFeedback');
+    if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
+        feedback.style.color = isSuccess ? '#155724' : '#721c24';
+        feedback.textContent = message;
+        
+        setTimeout(() => {
+            feedback.style.display = 'none';
+        }, 3000);
+    }
 }
 
 // Initialize everything when DOM is loaded
@@ -272,94 +249,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Add save button if not exists
-    if (!document.querySelector('.save-button')) {
-        const saveButton = document.createElement('button');
-        saveButton.textContent = 'Save Estimate';
-        saveButton.className = 'save-button';
-        saveButton.onclick = saveEstimate;
-        document.querySelector('.estimate-table').after(saveButton);
-    }
-    
-    // Initialize form validation
-    const form = document.getElementById('customerForm');
-    if (form) {
-        form.querySelectorAll('input').forEach(input => {
-            const validator = validators[input.name];
-            if (validator) {
-                input.addEventListener('input', () => {
-                    const result = validator(input.value);
-                    input.setCustomValidity(result.isValid ? '' : result.message);
-                    input.reportValidity();
-                });
-            }
-        });
-    }
+    // Restore original working save button setup
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save Estimate';
+    saveButton.className = 'save-button';
+    saveButton.addEventListener('click', saveEstimate);  // Direct click handler
+    document.querySelector('.estimate-table').after(saveButton);
     
     // Calculate initial totals
     updateGrandTotal();
-});
-
-function showFeedback(message, isSuccess) {
-    const feedback = document.getElementById('saveFeedback');
-    feedback.style.display = 'block';
-    feedback.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
-    feedback.style.color = isSuccess ? '#155724' : '#721c24';
-    feedback.textContent = message;
-    
-    // Hide feedback after 3 seconds
-    setTimeout(() => {
-        feedback.style.display = 'none';
-    }, 3000);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Add save button event listener
-    const saveButton = document.getElementById('saveEstimate');
-    if (saveButton) {
-        saveButton.addEventListener('click', function() {
-            try {
-                // Collect form data
-                const estimateData = {
-                    customer: {
-                        name: document.getElementById('name').value,
-                        email: document.getElementById('email').value,
-                        phone: document.getElementById('phone').value,
-                        address: document.getElementById('address').value,
-                        date: document.getElementById('date').value
-                    },
-                    items: [],
-                    totalAmount: document.getElementById('grandTotal').textContent
-                };
-
-                // Collect line items
-                document.querySelectorAll('.estimate-table tbody tr').forEach(row => {
-                    const typeSelect = row.querySelector('td:first-child select');
-                    const quantitySelect = row.querySelector('td:nth-child(2) select');
-                    if (typeSelect?.value) {
-                        estimateData.items.push({
-                            type: typeSelect.name,
-                            selection: typeSelect.value,
-                            quantity: parseInt(quantitySelect.value) || 0,
-                            price: row.querySelector('.price-cell').textContent,
-                            total: row.querySelector('.total-cell').textContent
-                        });
-                    }
-                });
-
-                // Save to localStorage
-                let estimates = JSON.parse(localStorage.getItem('estimates') || '[]');
-                estimates.push(estimateData);
-                localStorage.setItem('estimates', JSON.stringify(estimates));
-
-                // Show success message
-                alert('Estimate saved successfully!');
-                console.log('Saved estimate:', estimateData);
-
-            } catch (error) {
-                console.error('Save error:', error);
-                alert('Error saving estimate: ' + error.message);
-            }
-        });
-    }
 });
