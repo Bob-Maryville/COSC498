@@ -67,41 +67,6 @@ function loadEstimates() {
     });
 }
 
-// Add styles
-const style = document.createElement('style');
-style.textContent = `
-    .clickable {
-        cursor: pointer;
-        color: blue;
-        text-decoration: underline;
-    }
-    .clickable:hover {
-        color: darkblue;
-    }
-    .po-table {
-        width: 100%;
-        margin-top: 20px;
-        border-collapse: collapse;
-    }
-    .po-table th, .po-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
-    .print-button {
-        margin-top: 20px;
-        padding: 10px 20px;
-    }
-    @media print {
-        nav, .estimates-list, .print-button {
-            display: none;
-        }
-        #purchaseOrderDisplay {
-            display: block !important;
-        }
-    }
-`;
-document.head.appendChild(style);
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', loadEstimates);
