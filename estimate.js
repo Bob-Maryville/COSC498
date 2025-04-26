@@ -41,8 +41,8 @@ const validators = {
         message: 'Please enter a valid email address'
     }),
     phone: (value) => ({
-        isValid: /^\+?[1-9][0-9]{9,9}$/.test(value),
-        message: 'Please enter a valid phone number'
+        isValid: /^\+?[1-9][0-9]{9,14}$/.test(value),
+        message: 'Please enter a valid phone number (10-15 digits)'
     }),
     address: (value) => ({
         isValid: value.length >= 5 && value.length <= 100,
@@ -134,18 +134,37 @@ function validateForm() {
     let isValid = true;
     const form = document.getElementById('customerForm');
     
-    // Validate all input fields
+    // Reset previous validation errors
     form.querySelectorAll('input').forEach(input => {
-        const validator = validators[input.name];
+        input.setCustomValidity('');
+    });
+    
+    // Validate all required input fields
+    const requiredFields = ['name', 'email', 'phone', 'address'];
+    for (const fieldName of requiredFields) {
+        const input = document.getElementById(fieldName);
+        if (!input) continue;
+        
+        // First check if field is empty
+        if (!input.value.trim()) {
+            isValid = false;
+            input.setCustomValidity(`${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`);
+            input.reportValidity();
+            return false; // Stop on first error
+        }
+        
+        // Then apply specific validation
+        const validator = validators[fieldName];
         if (validator) {
             const result = validator(input.value);
             if (!result.isValid) {
                 isValid = false;
                 input.setCustomValidity(result.message);
                 input.reportValidity();
+                return false; // Stop on first error
             }
         }
-    });
+    }
 
     // Validate date
     const dateInput = document.getElementById('date');
@@ -153,6 +172,7 @@ function validateForm() {
         isValid = false;
         dateInput.setCustomValidity('Please select a date');
         dateInput.reportValidity();
+        return false;
     }
 
     // Validate at least one item is selected
@@ -162,6 +182,7 @@ function validateForm() {
     if (!hasItems) {
         isValid = false;
         alert('Please select at least one item for the estimate');
+        return false;
     }
 
     return isValid;
@@ -169,6 +190,11 @@ function validateForm() {
 
 function saveEstimate() {
     try {
+        // First validate the form
+        if (!validateForm()) {
+            return; // Stop if validation fails
+        }
+        
         // Generate ID
         const estimateId = Date.now();
         
@@ -211,26 +237,43 @@ function saveEstimate() {
         localStorage.setItem('estimates', JSON.stringify(estimates));
 
         // Success message and redirect
-        alert('Estimate saved successfully!');
-        window.location.href = 'find-estimate.html';
+        showFeedback('Estimate saved successfully!', true);
+        setTimeout(() => {
+            window.location.href = 'find-estimate.html';
+        }, 1500);
         
     } catch (error) {
         console.error('Save error:', error);
-        alert('Error saving estimate: ' + error.message);
+        showFeedback('Error saving estimate: ' + error.message, false);
     }
 }
 
-
-
 // Show feedback message
 function showFeedback(message, isSuccess) {
-    const feedback = document.getElementById('saveFeedback');
-    if (feedback) {
-        feedback.style.display = 'block';
-        feedback.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
-        feedback.style.color = isSuccess ? '#155724' : '#721c24';
-        feedback.textContent = message;
+    // Create feedback element if it doesn't exist
+    let feedback = document.getElementById('saveFeedback');
+    if (!feedback) {
+        feedback = document.createElement('div');
+        feedback.id = 'saveFeedback';
+        feedback.style.padding = '10px';
+        feedback.style.margin = '10px 0';
+        feedback.style.borderRadius = '5px';
+        feedback.style.textAlign = 'center';
         
+        const saveButton = document.querySelector('.save-button');
+        if (saveButton) {
+            saveButton.after(feedback);
+        } else {
+            document.querySelector('.estimate-table').after(feedback);
+        }
+    }
+    
+    feedback.style.display = 'block';
+    feedback.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
+    feedback.style.color = isSuccess ? '#155724' : '#721c24';
+    feedback.textContent = message;
+    
+    if (isSuccess) {
         setTimeout(() => {
             feedback.style.display = 'none';
         }, 3000);
@@ -249,12 +292,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Restore original working save button setup
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save Estimate';
-    saveButton.className = 'save-button';
-    saveButton.addEventListener('click', saveEstimate);  // Direct click handler
-    document.querySelector('.estimate-table').after(saveButton);
+    // Set up save button
+    const saveButton = document.querySelector('.save-button');
+    if (!saveButton) {
+        const newSaveButton = document.createElement('button');
+        newSaveButton.textContent = 'Save Estimate';
+        newSaveButton.className = 'save-button';
+        document.querySelector('.estimate-table').after(newSaveButton);
+        
+        // Add event listener to the save button
+        newSaveButton.addEventListener('click', saveEstimate);
+    } else {
+        // Clean up any existing listeners and set a new one
+        saveButton.removeEventListener('click', saveEstimate);
+        saveButton.addEventListener('click', saveEstimate);
+    }
+    
+    // Set today's date as default
+    const dateInput = document.getElementById('date');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
     
     // Calculate initial totals
     updateGrandTotal();
