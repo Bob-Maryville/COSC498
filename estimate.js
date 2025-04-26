@@ -1,13 +1,13 @@
 // Price constants for all item types
 const ITEM_PRICES = {
     'shingle-type': {
-        '3-tab': 75.00,
-        'architectural': 95.00,
-        'designer': 125.00
+        '3-tab': 200.00,
+        'architectural': 300.00,
+        'designer': 400.00
     },
     'drip-edge': {
-        'drip-edge-small': 45.00,
-        'drip-edge-large': 65.00
+        'drip-edge-small': 5.00,
+        'drip-edge-large': 8.00
     },
     'vent-type': {
         'box': 45.00,
@@ -20,8 +20,8 @@ const ITEM_PRICES = {
         'chimney-large': 250.00
     },
     'underlayment-type': {
-        'felt': 35.00,
-        'synthetic': 55.00
+        'felt': 50.00,
+        'synthetic': 65.00
     },
     'dumpster-size': {
         'dump-small': 350.00,
