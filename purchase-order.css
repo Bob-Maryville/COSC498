@@ -28,3 +28,24 @@
         display: block !important;
     }
 }
+
+/* Navigation Styles */
+.nav {
+    display: flex;
+    gap: 20px;
+    background-color: #333;
+    padding: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.nav a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    white-space: nowrap;
+}
+
+.nav a:hover {
+    background-color: #555;
+}

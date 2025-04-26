@@ -14,19 +14,24 @@ h1 {
     font-size: 2em;
 }
 
-.nav-links {
-    text-align: center;
-    padding: 10px;
+.nav {
+    display: flex;
+    gap: 20px;
+    background-color: #333;
+    padding: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
 }
 
-.nav-links a {
-    color: #0066cc;
+.nav a {
+    color: white;
     text-decoration: none;
-    margin: 0 15px;
+    padding: 5px 10px;
+    white-space: nowrap;
 }
 
-.nav-links a:hover {
-    text-decoration: underline;
+.nav a:hover {
+    background-color: #555;
 }
 
 /* Customer Information Form Styles */
