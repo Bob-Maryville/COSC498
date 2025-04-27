@@ -113,10 +113,10 @@ function displayEstimate(estimate) {
                 <div class="estimate-header">
                     <div class="company-info">
                         <h1>Roofing Estimate</h1>
-                        <h2>Your Roofing Company</h2>
+                        <h2>Bob's Roofing Company</h2>
                         <p>123 Main Street, St. Louis, MO 63101</p>
-                        <p>Phone: (555) 123-4567</p>
-                        <p>Email: info@yourroofingcompany.com</p>
+                        <p>Phone: (314) 123-4567</p>
+                        <p>Email: info@bobsroofingcompany.com</p>
                     </div>
                     <div class="estimate-meta">
                         <div class="estimate-number">
