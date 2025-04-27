@@ -4,52 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Purchase Order</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="find-estimate-styles.css">
     <link rel="stylesheet" href="purchase-order.css">
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="create-estimate.html">Create Estimate</a>
+        <a href="find-estimate.html">Find Estimate</a>
+        <a href="purchase-order.html">Create Purchase Order</a>
+    </nav>
 
-        <!-- Navigation -->
-        <nav class="nav">
-            <a href="index.html">Home</a>
-            <a href="create-estimate.html">Create Estimate</a>
-            <a href="find-estimate.html">Find Estimate</a>
-        </nav>
+    <h1>Create Purchase Order</h1>
+    
+    <!-- Search Filters -->
+    <div class="filter-container">
+        <input type="text" id="customerSearch" placeholder="Search by customer name...">
+        <select id="sortOrder">
+            <option value="name">Sort by Name</option>
+            <option value="date">Sort by Date</option>
+            <option value="total">Sort by Total</option>
+        </select>
+    </div>
 
+    <!-- Estimates List -->
+    <div class="estimates-container">
+        <h2>Select an Estimate to Convert</h2>
+        <table class="estimates-table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="estimatesList">
+                <!-- Estimates will be populated here -->
+            </tbody>
+        </table>
+    </div>
 
-        <h1>Create Purchase Order</h1>
-        
+    <!-- Error Message -->
+    <div id="errorMessage" class="error-message" style="display: none;">
+        <h2>Error</h2>
+        <p id="errorText"></p>
+    </div>
 
-
-        <!-- Estimates List -->
-        <div class="estimates-list">
-            <h2>Select Estimate</h2>
-            <table id="estimatesTable">
-                <thead>
-                    <tr>
-                        <th>Customer Name</th>
-                        <th>Date</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody id="estimatesList">
-                    <!-- Estimates will be populated here -->
-                </tbody>
-            </table>
+    <!-- Purchase Order Display -->
+    <div id="purchaseOrderDisplay" class="purchase-order-container" style="display: none;">
+        <div class="po-header">
+            <div class="company-info">
+                <h1>Purchase Order</h1>
+                <h2>Bob's Roofing Company</h2>
+                <p>123 Main Street, St. Louis, MO 63101</p>
+                <p>Phone: (314) 123-4567</p>
+                <p>Email: info@bobsroofingcompany.com</p>
+            </div>
+            <div class="po-meta">
+                <div class="po-number">
+                    <h3>PO #</h3>
+                    <p id="poNumber"></p>
+                </div>
+                <div class="po-date">
+                    <h3>Date</h3>
+                    <p id="poDate"></p>
+                </div>
+            </div>
         </div>
 
-        <!-- Purchase Order Display -->
-        <div id="purchaseOrderDisplay" style="display: none;">
-            <h2>Purchase Order</h2>
-            <div class="po-details">
-                <p><strong>Customer:</strong> <span id="poCustomer"></span></p>
-                <p><strong>Date:</strong> <span id="poDate"></span></p>
+        <div class="customer-section">
+            <h2>Customer Information</h2>
+            <div class="customer-details">
+                <p><strong>Name:</strong> <span id="poCustomer"></span></p>
+                <p><strong>Address:</strong> <span id="poAddress"></span></p>
+                <p><strong>Email:</strong> <span id="poEmail"></span></p>
+                <p><strong>Phone:</strong> <span id="poPhone"></span></p>
             </div>
+        </div>
+
+        <div class="items-section">
+            <h2>Order Details</h2>
             <table class="po-table">
                 <thead>
                     <tr>
-                        <th>Item Type</th>
-                        <th>Selection</th>
+                        <th>Item</th>
+                        <th>Description</th>
                         <th>Quantity</th>
                         <th>Total</th>
                     </tr>
@@ -59,12 +99,40 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3" style="text-align: right;"><strong>Grand Total:</strong></td>
-                        <td id="poGrandTotal"></td>
+                        <td colspan="3" class="total-label">Grand Total:</td>
+                        <td id="poGrandTotal" class="grand-total"></td>
                     </tr>
                 </tfoot>
             </table>
-            <button onclick="window.print()" class="print-button">Print Purchase Order</button>
+        </div>
+
+        <div class="terms-section">
+            <h2>Terms & Conditions</h2>
+            <p>1. This purchase order is valid for 30 days from the date of issue.</p>
+            <p>2. A 50% deposit is required to begin work.</p>
+            <p>3. Final payment is due upon completion of work.</p>
+            <p>4. Warranty: 5-year workmanship warranty on all installations.</p>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-line">
+                <div class="line"></div>
+                <p>Authorized Signature</p>
+            </div>
+            <div class="signature-line">
+                <div class="line"></div>
+                <p>Date</p>
+            </div>
+        </div>
+        
+        <div class="po-footer">
+            <p>Generated on <span id="generationDate"></span></p>
+        </div>
+        
+        <div class="actions">
+            <button id="printButton" class="button primary-button">Print Purchase Order</button>
+            <button id="saveButton" class="button secondary-button">Save Purchase Order</button>
+            <a href="purchase-order.html" class="button secondary-button">New Purchase Order</a>
         </div>
     </div>
 
