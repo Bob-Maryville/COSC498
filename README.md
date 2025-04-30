@@ -35,7 +35,7 @@ This is a web-based roofing estimating software created as a capstone project fo
     ```bash
     cd roofing-estimator
     ```
-3. Open `index.html` using Live Server or a browser.
+3. Open `home.html` using Live Server or a browser.
 
 ---
 
@@ -66,7 +66,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 - Instructor: Michael Palmer
 - University: Maryville University  
-- Resources: I am using you.com as a resource for the code for this project.
+- Resources: I am using you.com and claude.ai as resources for the code for this project.
 
 ---
 

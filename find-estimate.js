@@ -115,7 +115,7 @@ function sortEstimates(sortBy) {
                 sortedEstimates.sort((a, b) => {
                     const dateA = a.date ? new Date(a.date) : new Date(0);
                     const dateB = b.date ? new Date(b.date) : new Date(0);
-                    return dateB - dateA; // Newest first
+                    return dateB - dateA;
                 });
                 break;
                 
@@ -131,7 +131,7 @@ function sortEstimates(sortBy) {
                     const amountA = getAmount(a);
                     const amountB = getAmount(b);
                     
-                    return amountB - amountA; // Highest first
+                    return amountB - amountA;
                 });
                 break;
                 
